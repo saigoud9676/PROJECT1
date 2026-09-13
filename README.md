@@ -1,0 +1,134 @@
+[index.html](https://github.com/user-attachments/files/32160150/index.html)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wildlife Monitoring with Drones</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f4f4f4;
+    }
+    header {
+      width: 100%;
+      background-color: #006400;
+      color: white;
+      padding: 15px 0;
+      text-align: center;
+    }
+    main {
+      width: 90%;
+      max-width: 1200px;
+      margin: 20px auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #video-feed {
+      width: 100%;
+      max-width: 800px;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      height: 450px;
+      border: 2px solid #006400;
+      border-radius: 10px;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .controls button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+    .controls button.start {
+      background-color: #006400;
+      color: white;
+    }
+    .controls button.stop {
+      background-color: #8b0000;
+      color: white;
+    }
+    .info {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 800px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 15px;
+    }
+    .info h3 {
+      margin: 0 0 10px;
+      color: #006400;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Wildlife Monitoring with Drones</h1>
+  </header>
+  <main>
+    <div id="video-feed">Video feed will appear here...</div>
+    <div class="controls">
+      <button class="start" onclick="startMonitoring()">Start Monitoring</button>
+      <button class="stop" onclick="stopMonitoring()">Stop Monitoring</button>
+    </div>
+    <div class="info">
+      <h3>Detection Information:</h3>
+      <ul id="detection-list">
+        <li>No detections yet...</li>
+      </ul>
+    </div>
+  </main>
+  <script>
+    function startMonitoring() {
+      const videoFeed = document.getElementById("video-feed");
+      videoFeed.textContent = "starting the live video..";
+      videoFeed.textContent = "Initializing video feed...";
+      setTimeout(() => {
+        videoFeed.textContent = "Drone video feed is live!";
+      }, 2000);
+    }
+
+    function stopMonitoring() {
+      const videoFeed = document.getElementById("video-feed");
+      videoFeed.textContent = "Video feed stopped.";
+      videoFeed.textContent = "ENDED.";
+    }
+    
+    function updateDetections(detections) {
+      const detectionList = document.getElementById("detection-list");
+      detectionList.innerHTML = ""; 
+      detections.forEach((detection) => {
+        const li = document.createElement("li");
+        li.textContent = `${detection.type}: ${detection.confidence.toFixed(2)}`;
+        detectionList.appendChild(li);
+      });
+    }
+    setTimeout(() => {
+      updateDetections([
+        { type: "Deer", confidence: 0.95 },
+        { type: "Fox", confidence: 0.89 },
+        { type: "Elephant", confidence: 0.99},
+        { type: "camel", confidence: 1.98},
+        { type: "lion", confidence: 2.87},
+      ]);
+    }, 5000);
+  </script>
+</body>
+</html>
