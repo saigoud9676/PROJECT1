@@ -1,0 +1,111 @@
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+import os
+
+# Initialize the Flask app
+app = Flask(__name__)
+
+# Configure the database
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///wildlife.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+# Define database models
+class Drone(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    identifier = db.Column(db.String(80), unique=True, nullable=False)
+    location = db.Column(db.String(120), nullable=True)
+    last_active = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+class Observation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    drone_id = db.Column(db.Integer, db.ForeignKey('drone.id'), nullable=False)
+    species = db.Column(db.String(120), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    image_url = db.Column(db.String(250), nullable=True)
+    location = db.Column(db.String(120), nullable=True)
+
+# Initialize the database
+db.create_all()
+
+# Route to register a drone
+@app.route('/register_drone', methods=['POST'])
+def register_drone():
+    data = request.json
+    identifier = data.get('identifier')
+    location = data.get('location')
+
+    if not identifier:
+        return jsonify({"error": "Identifier is required"}), 400
+
+    drone = Drone(identifier=identifier, location=location)
+    db.session.add(drone)
+    db.session.commit()
+    return jsonify({"message": "Drone registered successfully", "drone_id": drone.id})
+
+# Route to report an observation
+@app.route('/report_observation', methods=['POST'])
+def report_observation():
+    data = request.json
+    drone_id = data.get('drone_id')
+    species = data.get('species')
+    image_url = data.get('image_url')
+    location = data.get('location')
+
+    if not (drone_id and species):
+        return jsonify({"error": "Drone ID and species are required"}), 400
+
+    observation = Observation(drone_id=drone_id, species=species, image_url=image_url, location=location)
+    db.session.add(observation)
+    db.session.commit()
+    return jsonify({"message": "Observation reported successfully", "observation_id": observation.id})
+
+# Route to fetch observations
+@app.route('/observations', methods=['GET'])
+def get_observations():
+    drone_id = request.args.get('drone_id')
+    species = request.args.get('species')
+
+    query = Observation.query
+    if drone_id:
+        query = query.filter_by(drone_id=drone_id)
+    if species:
+        query = query.filter_by(species=species)
+
+    observations = query.all()
+    result = [
+        {
+            "id": obs.id,
+            "drone_id": obs.drone_id,
+            "species": obs.species,
+            "timestamp": obs.timestamp,
+            "image_url": obs.image_url,
+            "location": obs.location
+        }
+        for obs in observations
+    ]
+    return jsonify(result)
+
+# Route to update drone location
+@app.route('/update_drone_location', methods=['PUT'])
+def update_drone_location():
+    data = request.json
+    drone_id = data.get('drone_id')
+    location = data.get('location')
+
+    if not (drone_id and location):
+        return jsonify({"error": "Drone ID and location are required"}), 400
+
+    drone = Drone.query.get(drone_id)
+    if not drone:
+        return jsonify({"error": "Drone not found"}), 404
+
+    drone.location = location
+    drone.last_active = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"message": "Drone location updated successfully"})
+
+if __name__ == '__main__':
+    app.run(debug=True)
